@@ -2,6 +2,7 @@ package proto
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric-protos-go/common"
@@ -17,10 +18,15 @@ import (
 
 type channelName string
 
-var configBlocks map[channelName]*common.Block
+var (
+	configBlocks map[channelName]*common.Block
+	mu           sync.Mutex
+)
 
 func init() {
+	mu.Lock()
 	configBlocks = make(map[channelName]*common.Block)
+	mu.Unlock()
 }
 
 type Block struct {
@@ -51,10 +57,16 @@ func ParseBlock(block *common.Block) (*Block, error) {
 
 	// parse BFT orderer identities
 	if block.Header.Number == 0 {
+		mu.Lock()
 		configBlocks[channelName(parsedBlock.Envelopes[0].ChannelHeader.ChannelId)] = block
+		mu.Unlock()
 	} else {
+		mu.Lock()
+		configBlock := configBlocks[channelName(parsedBlock.Envelopes[0].ChannelHeader.ChannelId)]
+		mu.Unlock()
+
 		var bftOrdererIdentities []*msp.SerializedIdentity
-		bftOrdererIdentities, err = ParseBTFOrderersIdentities(block, configBlocks[channelName(parsedBlock.Envelopes[0].ChannelHeader.ChannelId)])
+		bftOrdererIdentities, err = ParseBTFOrderersIdentities(block, configBlock)
 		if err != nil {
 			return nil, fmt.Errorf("parsing bft orderers identities: %w", err)
 		}
