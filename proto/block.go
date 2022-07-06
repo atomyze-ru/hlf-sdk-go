@@ -51,7 +51,7 @@ func ParseBlock(block *common.Block) (*Block, error) {
 	if err != nil {
 		return nil, fmt.Errorf("parsing orderer identity from block: %w", err)
 	}
-	if raftOrdererIdentity != nil {
+	if raftOrdererIdentity != nil && raftOrdererIdentity.IdBytes != nil {
 		parsedBlock.OrdererIdentities = append(parsedBlock.OrdererIdentities, raftOrdererIdentity)
 	}
 
