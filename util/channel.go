@@ -107,7 +107,7 @@ func ProceedChannelUpdate(
 		return errors.WithMessage(err, "signing payload failed")
 	}
 
-	if _, err := orderer.Broadcast(ctx, envelope); err != nil {
+	if _, err = orderer.Broadcast(ctx, envelope); err != nil {
 		return errors.WithMessage(err, "failed broadcast to orderer")
 	}
 

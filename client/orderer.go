@@ -124,10 +124,10 @@ func (o *Orderer) Deliver(ctx context.Context, envelope *common.Envelope) (block
 		return nil, fmt.Errorf(`initialize deliver client: %w`, err)
 	}
 
-	waitc := make(chan struct{}, 0)
+	waitCh := make(chan struct{}, 0)
 
 	go func() {
-		defer close(waitc)
+		defer close(waitCh)
 		for {
 			resp, errR := cli.Recv()
 			if errR == io.EOF {
@@ -160,7 +160,7 @@ func (o *Orderer) Deliver(ctx context.Context, envelope *common.Envelope) (block
 	}
 
 	err = cli.CloseSend()
-	<-waitc
+	<-waitCh
 	return
 }
 
