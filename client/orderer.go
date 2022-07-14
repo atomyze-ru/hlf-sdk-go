@@ -44,7 +44,7 @@ func NewOrderer(dialCtx context.Context, c config.ConnectionConfig, logger *zap.
 		return nil, fmt.Errorf(`get orderer GRPC options: %w`, err)
 	}
 
-	// Dial shoould always has timeout
+	// Dial should always have timeout
 	ctxDeadline, exists := dialCtx.Deadline()
 	if !exists {
 		dialTimeout := c.Timeout.Duration
@@ -62,7 +62,7 @@ func NewOrderer(dialCtx context.Context, c config.ConnectionConfig, logger *zap.
 	logger.Debug(`dial to orderer`, zap.String(`host`, c.Host), zap.Time(`context deadline`, ctxDeadline))
 	conn, err := grpc.DialContext(dialCtx, c.Host, opts.Dial...)
 	if err != nil {
-		return nil, fmt.Errorf(`dial to orderer=: %w`, err)
+		return nil, fmt.Errorf(`dial to orderer=%s: %w`, c.Host, err)
 	}
 
 	return NewOrdererFromGRPC(conn)
