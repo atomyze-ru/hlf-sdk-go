@@ -7,13 +7,15 @@ import (
 	"github.com/hyperledger/fabric-protos-go/common"
 	"github.com/hyperledger/fabric-protos-go/orderer"
 	"github.com/hyperledger/fabric/msp"
+
+	"github.com/atomyze-ru/hlf-sdk-go/api"
 )
 
 type Orderers struct {
-	orderers []*Orderer
+	orderers []api.Orderer
 }
 
-func NewOrderers(orderers ...*Orderer) *Orderers {
+func NewOrderers(orderers ...api.Orderer) *Orderers {
 	return &Orderers{
 		orderers: orderers,
 	}
