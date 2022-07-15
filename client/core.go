@@ -118,7 +118,6 @@ func (c *core) FabricV2() bool {
 }
 
 func New(identity api.Identity, opts ...CoreOpt) (api.Core, error) {
-
 	if identity == nil {
 		return nil, errors.New("identity wasn't provided")
 	}
