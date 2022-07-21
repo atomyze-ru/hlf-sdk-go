@@ -111,9 +111,9 @@ type Duration struct {
 }
 
 type Endpoint struct {
-	Address         string    `yaml:"address"`
-	AddressOverride string    `yaml:"address_override"`
-	TlsConfig       TlsConfig `yaml:"tls"`
+	Host         string    `yaml:"host"`
+	HostOverride string    `yaml:"host_override"`
+	TlsConfig    TlsConfig `yaml:"tls"`
 }
 
 func (d *Duration) UnmarshalYAML(unmarshal func(interface{}) error) error {

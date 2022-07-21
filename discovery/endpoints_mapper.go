@@ -23,12 +23,12 @@ func NewEndpointsMapper(endpoints []config.Endpoint) *EndpointsMapper {
 		var hostAddress api.HostAddress
 		hostAddress.TlsConfig = e.TlsConfig
 
-		hostAddress.Address = e.Address
-		if e.AddressOverride != "" {
-			hostAddress.Address = e.AddressOverride
+		hostAddress.Address = e.Host
+		if e.HostOverride != "" {
+			hostAddress.Address = e.HostOverride
 		}
 
-		addressEndpointMap[e.Address] = &hostAddress
+		addressEndpointMap[e.Host] = &hostAddress
 	}
 
 	return &EndpointsMapper{
@@ -86,11 +86,11 @@ func newChaincodeDiscovererTLSDecorator(
 }
 
 func (d *chaincodeDiscovererTLSDecorator) Endorsers() []*api.HostEndpoint {
-	return addTLSSettings(d.target.Endorsers(), d.tlsMapper)
+	return addTLConfigs(d.target.Endorsers(), d.tlsMapper)
 }
 
 func (d *chaincodeDiscovererTLSDecorator) Orderers() []*api.HostEndpoint {
-	return addTLSSettings(d.target.Orderers(), d.tlsMapper)
+	return addTLConfigs(d.target.Orderers(), d.tlsMapper)
 }
 
 func (d *chaincodeDiscovererTLSDecorator) ChaincodeVersion() string {
@@ -122,14 +122,14 @@ func newChannelDiscovererTLSDecorator(
 }
 
 func (d *channelDiscovererTLSDecorator) Orderers() []*api.HostEndpoint {
-	return addTLSSettings(d.target.Orderers(), d.tlsMapper)
+	return addTLConfigs(d.target.Orderers(), d.tlsMapper)
 }
 
 func (d *channelDiscovererTLSDecorator) ChannelName() string {
 	return d.target.ChannelName()
 }
 
-func addTLSSettings(endpoints []*api.HostEndpoint, tlsMapper tlsConfigMapper) []*api.HostEndpoint {
+func addTLConfigs(endpoints []*api.HostEndpoint, tlsMapper tlsConfigMapper) []*api.HostEndpoint {
 	for i := range endpoints {
 		for j := range endpoints[i].HostAddresses {
 			tlsCfg := tlsMapper.TlsConfigForAddress(endpoints[i].HostAddresses[j].Address)
@@ -158,5 +158,5 @@ func newLocalPeersDiscovererTLSDecorator(
 }
 
 func (d *localPeersDiscovererTLSDecorator) Peers() []*api.HostEndpoint {
-	return addTLSSettings(d.target.Peers(), d.tlsMapper)
+	return addTLConfigs(d.target.Peers(), d.tlsMapper)
 }
