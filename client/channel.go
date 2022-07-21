@@ -66,12 +66,12 @@ func (c *Channel) Chaincode(serviceDiscCtx context.Context, ccName string) (api.
 		for j := range endorsers[i].HostAddresses {
 			hostAddr := endorsers[i].HostAddresses[j]
 			// we can get empty address in local discovery and peers must be already in pool
-			if hostAddr.Address == "" {
+			if hostAddr.Host == "" {
 				continue
 			}
 			mspID := endorsers[i].MspID
 			grpcCfg := config.ConnectionConfig{
-				Host: hostAddr.Address,
+				Host: hostAddr.Host,
 				Tls:  hostAddr.TlsConfig,
 			}
 			l := c.log

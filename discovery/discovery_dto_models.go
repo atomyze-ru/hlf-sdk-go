@@ -83,12 +83,12 @@ func mapToArray(hosts map[string][]string) []*api.HostEndpoint {
 
 		he := &api.HostEndpoint{
 			MspID:         k,
-			HostAddresses: make([]*api.HostAddress, len(endpoints)),
+			HostAddresses: make([]*api.Endpoint, len(endpoints)),
 		}
 
 		for i := range endpoints {
-			he.HostAddresses[i] = &api.HostAddress{
-				Address: endpoints[i],
+			he.HostAddresses[i] = &api.Endpoint{
+				Host: endpoints[i],
 			}
 		}
 		res = append(res, he)

@@ -23,7 +23,7 @@ type GossipDiscoveryProvider struct {
 
 // return tls config for peers found via gossip
 type connectionMapper interface {
-	MapConnection(address string) *api.HostAddress
+	MapConnection(address string) *api.Endpoint
 }
 
 func NewGossipDiscoveryProvider(

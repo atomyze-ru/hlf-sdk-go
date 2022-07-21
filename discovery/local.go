@@ -28,7 +28,7 @@ type opts struct {
 func NewLocalConfigProvider(options config.DiscoveryConfigOpts, tlsMapper connectionMapper) (api.DiscoveryProvider, error) {
 	var opts opts
 	if err := mapstructure.Decode(options, &opts); err != nil {
-		return nil, errors.Wrap(err, `failed to decode params`)
+		return nil, fmt.Errorf(`decode params: %w`, err)
 	}
 
 	return &LocalConfigProvider{channels: opts.Channels, tlsMapper: tlsMapper}, nil

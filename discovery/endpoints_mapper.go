@@ -12,32 +12,32 @@ var _ connectionMapper = (*EndpointsMapper)(nil)
 
 // EndpointsMapper - if tls is enabled with gossip maps provided from cfg TLS certs to discovered peers
 type EndpointsMapper struct {
-	addressEndpoint map[string]*api.HostAddress
+	addressEndpoint map[string]*api.Endpoint
 	lock            sync.RWMutex
 }
 
 func NewEndpointsMapper(endpoints []config.Endpoint) *EndpointsMapper {
-	addressEndpointMap := make(map[string]*api.HostAddress)
+	endpointMap := make(map[string]*api.Endpoint)
 
 	for _, e := range endpoints {
-		var hostAddress api.HostAddress
+		var hostAddress api.Endpoint
 		hostAddress.TlsConfig = e.TlsConfig
 
-		hostAddress.Address = e.Host
+		hostAddress.Host = e.Host
 		if e.HostOverride != "" {
-			hostAddress.Address = e.HostOverride
+			hostAddress.Host = e.HostOverride
 		}
 
-		addressEndpointMap[e.Host] = &hostAddress
+		endpointMap[e.Host] = &hostAddress
 	}
 
 	return &EndpointsMapper{
-		addressEndpoint: addressEndpointMap,
+		addressEndpoint: endpointMap,
 		lock:            sync.RWMutex{},
 	}
 }
 
-func (m *EndpointsMapper) MapConnection(address string) *api.HostAddress {
+func (m *EndpointsMapper) MapConnection(address string) *api.Endpoint {
 	m.lock.RLock()
 	defer m.lock.RUnlock()
 
@@ -46,7 +46,7 @@ func (m *EndpointsMapper) MapConnection(address string) *api.HostAddress {
 		return endpoint
 	}
 
-	return &api.HostAddress{}
+	return &api.Endpoint{}
 }
 
 // TlsConfigForAddress - get tls config for provided address
@@ -71,7 +71,7 @@ func (m *EndpointsMapper) TlsEndpointForAddress(address string) string {
 
 	v, ok := m.addressEndpoint[address]
 	if ok {
-		return v.Address
+		return v.Host
 	}
 
 	return address
@@ -144,10 +144,10 @@ func (d *channelDiscovererTLSDecorator) ChannelName() string {
 func addTLConfigs(endpoints []*api.HostEndpoint, tlsMapper connectionMapper) []*api.HostEndpoint {
 	for i := range endpoints {
 		for j := range endpoints[i].HostAddresses {
-			conn := tlsMapper.MapConnection(endpoints[i].HostAddresses[j].Address)
+			conn := tlsMapper.MapConnection(endpoints[i].HostAddresses[j].Host)
 
 			endpoints[i].HostAddresses[j].TlsConfig = conn.TlsConfig
-			endpoints[i].HostAddresses[j].Address = conn.Address
+			endpoints[i].HostAddresses[j].Host = conn.Host
 		}
 	}
 	return endpoints

@@ -40,95 +40,95 @@ func New(identity api.Identity, opts ...CoreOpt) (api.Core, error) {
 		return nil, errors.New("identity wasn't provided")
 	}
 
-	coreImp := &core{
+	coreImpl := &core{
 		channels: make(map[string]api.Channel),
 	}
 
 	for _, option := range opts {
-		if err := option(coreImp); err != nil {
+		if err := option(coreImpl); err != nil {
 			return nil, fmt.Errorf(`apply option: %w`, err)
 		}
 	}
 
-	if coreImp.ctx == nil {
-		coreImp.ctx = context.Background()
+	if coreImpl.ctx == nil {
+		coreImpl.ctx = context.Background()
 	}
 
-	if coreImp.logger == nil {
-		coreImp.logger = DefaultLogger
+	if coreImpl.logger == nil {
+		coreImpl.logger = DefaultLogger
 	}
 
 	var err error
-	if coreImp.cs == nil {
-		coreImp.cs, err = crypto.GetSuite(ecdsa.DefaultConfig.Type, ecdsa.DefaultConfig.Options)
+	if coreImpl.cs == nil {
+		coreImpl.cs, err = crypto.GetSuite(ecdsa.DefaultConfig.Type, ecdsa.DefaultConfig.Options)
 		if err != nil {
 			return nil, fmt.Errorf(`initialize crypto suite: %w`, err)
 		}
 	}
 
-	coreImp.identity = identity.GetSigningIdentity(coreImp.cs)
+	coreImpl.identity = identity.GetSigningIdentity(coreImpl.cs)
 
 	// if peerPool is empty, set it from config
-	if coreImp.peerPool == nil {
-		coreImp.logger.Info("initializing peer pool")
+	if coreImpl.peerPool == nil {
+		coreImpl.logger.Info("initializing peer pool")
 
-		if coreImp.config == nil {
+		if coreImpl.config == nil {
 			return nil, api.ErrEmptyConfig
 		}
 
-		coreImp.peerPool = NewPeerPool(coreImp.ctx, coreImp.logger)
-		for _, mspConfig := range coreImp.config.MSP {
+		coreImpl.peerPool = NewPeerPool(coreImpl.ctx, coreImpl.logger)
+		for _, mspConfig := range coreImpl.config.MSP {
 			for _, peerConfig := range mspConfig.Endorsers {
 				var p api.Peer
-				p, err = NewPeer(coreImp.ctx, peerConfig, coreImp.identity, coreImp.logger)
+				p, err = NewPeer(coreImpl.ctx, peerConfig, coreImpl.identity, coreImpl.logger)
 				if err != nil {
 					return nil, fmt.Errorf("initialize endorsers for MSP: %s: %w", mspConfig.Name, err)
 				}
 
-				if err = coreImp.peerPool.Add(mspConfig.Name, p, api.StrategyGRPC(api.DefaultDuration)); err != nil {
+				if err = coreImpl.peerPool.Add(mspConfig.Name, p, api.StrategyGRPC(api.DefaultDuration)); err != nil {
 					return nil, fmt.Errorf(`add peer to pool: %w`, err)
 				}
 			}
 		}
 	}
 
-	if coreImp.discoveryProvider == nil && coreImp.config != nil {
-		mapper := discovery.NewEndpointsMapper(coreImp.config.EndpointsMap)
+	if coreImpl.discoveryProvider == nil && coreImpl.config != nil {
+		mapper := discovery.NewEndpointsMapper(coreImpl.config.EndpointsMap)
 
-		switch coreImp.config.Discovery.Type {
+		switch coreImpl.config.Discovery.Type {
 		case string(discovery.LocalConfigServiceDiscoveryType):
-			coreImp.logger.Info("local discovery provider", zap.Reflect(`options`, coreImp.config.Discovery.Options))
+			coreImpl.logger.Info("local discovery provider", zap.Reflect(`options`, coreImpl.config.Discovery.Options))
 
-			coreImp.discoveryProvider, err = discovery.NewLocalConfigProvider(coreImp.config.Discovery.Options, mapper)
+			coreImpl.discoveryProvider, err = discovery.NewLocalConfigProvider(coreImpl.config.Discovery.Options, mapper)
 			if err != nil {
 				return nil, fmt.Errorf(`initialize discovery provider: %w`, err)
 			}
 
 		case string(discovery.GossipServiceDiscoveryType):
-			if coreImp.config.Discovery.Connection == nil {
+			if coreImpl.config.Discovery.Connection == nil {
 				return nil, fmt.Errorf(`discovery connection config wasn't provided. configure 'discovery.connection': %w`, err)
 			}
 
-			coreImp.logger.Info("gossip discovery provider", zap.Reflect(`connection`, coreImp.config.Discovery.Connection))
+			coreImpl.logger.Info("gossip discovery provider", zap.Reflect(`connection`, coreImpl.config.Discovery.Connection))
 
 			identitySigner := func(msg []byte) ([]byte, error) {
-				return coreImp.CurrentIdentity().Sign(msg)
+				return coreImpl.CurrentIdentity().Sign(msg)
 			}
 
-			clientIdentity, err := coreImp.CurrentIdentity().Serialize()
+			clientIdentity, err := coreImpl.CurrentIdentity().Serialize()
 			if err != nil {
 				return nil, fmt.Errorf(`serialize current identity: %w`, err)
 			}
 
 			// add tls settings from mapper if they were provided
-			conn := mapper.MapConnection(coreImp.config.Discovery.Connection.Host)
-			coreImp.config.Discovery.Connection.Tls = conn.TlsConfig
-			coreImp.config.Discovery.Connection.Host = conn.Address
+			conn := mapper.MapConnection(coreImpl.config.Discovery.Connection.Host)
+			coreImpl.config.Discovery.Connection.Tls = conn.TlsConfig
+			coreImpl.config.Discovery.Connection.Host = conn.Host
 
-			coreImp.discoveryProvider, err = discovery.NewGossipDiscoveryProvider(
-				coreImp.ctx,
-				*coreImp.config.Discovery.Connection,
-				coreImp.logger,
+			coreImpl.discoveryProvider, err = discovery.NewGossipDiscoveryProvider(
+				coreImpl.ctx,
+				*coreImpl.config.Discovery.Connection,
+				coreImpl.logger,
 				identitySigner,
 				clientIdentity,
 				mapper,
@@ -138,10 +138,10 @@ func New(identity api.Identity, opts ...CoreOpt) (api.Core, error) {
 			}
 
 			// discovery initialized, add local peers to the pool
-			lDiscoverer, err := coreImp.discoveryProvider.LocalPeers(coreImp.ctx)
+			lDiscoverer, err := coreImpl.discoveryProvider.LocalPeers(coreImpl.ctx)
 			if err != nil {
 				return nil, fmt.Errorf(`fetch local peers from discovery provider connection=%s: %w`,
-					coreImp.config.Discovery.Connection.Host, err)
+					coreImpl.config.Discovery.Connection.Host, err)
 			}
 
 			peers := lDiscoverer.Peers()
@@ -151,50 +151,45 @@ func New(identity api.Identity, opts ...CoreOpt) (api.Core, error) {
 
 				for _, lpAddresses := range lp.HostAddresses {
 					peerCfg := config.ConnectionConfig{
-						Host: lpAddresses.Address,
+						Host: lpAddresses.Host,
 						Tls:  lpAddresses.TlsConfig,
 					}
 
-					p, err := NewPeer(coreImp.ctx, peerCfg, coreImp.identity, coreImp.logger)
+					p, err := NewPeer(coreImpl.ctx, peerCfg, coreImpl.identity, coreImpl.logger)
 					if err != nil {
 						return nil, fmt.Errorf(`initialize endorsers for MSP: %s: %w`, mspID, err)
 					}
 
-					if err = coreImp.peerPool.Add(mspID, p, api.StrategyGRPC(api.DefaultDuration)); err != nil {
+					if err = coreImpl.peerPool.Add(mspID, p, api.StrategyGRPC(api.DefaultDuration)); err != nil {
 						return nil, fmt.Errorf(`add peer to pool: %w`, err)
 					}
 				}
 			}
 		default:
 			return nil, fmt.Errorf("unknown discovery type=%v. available: %v, %v",
-				coreImp.config.Discovery.Type,
+				coreImpl.config.Discovery.Type,
 				discovery.LocalConfigServiceDiscoveryType,
 				discovery.GossipServiceDiscoveryType,
 			)
 		}
 	}
 
-	if coreImp.orderer == nil && coreImp.config != nil {
-		coreImp.logger.Info("initializing orderer")
-		if len(coreImp.config.Orderers) > 0 {
-			ordConn, err := grpc.ConnectionFromConfigs(coreImp.ctx, coreImp.logger, coreImp.config.Orderers...)
+	if coreImpl.orderer == nil && coreImpl.config != nil {
+		coreImpl.logger.Info("initializing orderer")
+		if len(coreImpl.config.Orderers) > 0 {
+			ordConn, err := grpc.ConnectionFromConfigs(coreImpl.ctx, coreImpl.logger, coreImpl.config.Orderers...)
 			if err != nil {
 				return nil, fmt.Errorf(`initialize orderer connection: %w`, err)
 			}
 
-			coreImp.orderer, err = NewOrdererFromGRPC(ordConn)
+			coreImpl.orderer, err = NewOrdererFromGRPC(ordConn)
 			if err != nil {
 				return nil, fmt.Errorf(`initialize orderer: %w`, err)
 			}
 		}
 	}
 
-	//// use chaincode fetcher for Go chaincodes by default
-	//if coreImp.fetcher == nil {
-	//	coreImp.fetcher = fetcher.NewLocal(&golang.Platform{})
-	//}
-
-	return coreImp, nil
+	return coreImpl, nil
 }
 
 func (c *core) CurrentIdentity() msp.SigningIdentity {
@@ -250,7 +245,7 @@ func (c *core) Channel(name string) api.Channel {
 				if len(orderer.HostAddresses) > 0 {
 					for _, hostAddr := range orderer.HostAddresses {
 						grpcCfg := config.ConnectionConfig{
-							Host: hostAddr.Address,
+							Host: hostAddr.Host,
 							Tls:  hostAddr.TlsConfig,
 						}
 						grpcConnCfgs = append(grpcConnCfgs, grpcCfg)
