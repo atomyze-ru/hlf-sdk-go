@@ -39,6 +39,6 @@ type HostEndpoint struct {
 }
 
 type HostAddress struct {
-	Address     string
-	TLSSettings config.TlsConfig
+	Address   string
+	TlsConfig config.TlsConfig
 }

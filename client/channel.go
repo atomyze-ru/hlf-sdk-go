@@ -73,7 +73,7 @@ func (c *Channel) Chaincode(serviceDiscCtx context.Context, ccName string) (api.
 			mspID := endorsers[i].MspID
 			grpcCfg := config.ConnectionConfig{
 				Host: hostAddr.Address,
-				Tls:  hostAddr.TLSSettings,
+				Tls:  hostAddr.TlsConfig,
 			}
 			l := c.log
 

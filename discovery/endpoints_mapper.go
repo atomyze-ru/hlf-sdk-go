@@ -8,38 +8,61 @@ import (
 )
 
 // implementation of tlsConfigMapper interface
-var _ tlsConfigMapper = (*TLSCertsMapper)(nil)
+var _ tlsConfigMapper = (*EndpointsMapper)(nil)
 
-// TLSCertsMapper - if tls is enabled with gossip maps provided from cfg TLS certs to discovered peers
-type TLSCertsMapper struct {
-	addrCfgMap map[string]*config.TlsConfig
-	lock       sync.RWMutex
+// EndpointsMapper - if tls is enabled with gossip maps provided from cfg TLS certs to discovered peers
+type EndpointsMapper struct {
+	addressEndpoint map[string]*api.HostAddress
+	lock            sync.RWMutex
 }
 
-func NewTLSCertsMapper(certsCfg []config.TLSCertsMapperConfig) *TLSCertsMapper {
-	addrCfgMap := map[string]*config.TlsConfig{}
+func NewEndpointsMapper(endpoints []config.Endpoint) *EndpointsMapper {
+	addressEndpointMap := make(map[string]*api.HostAddress)
 
-	for i := range certsCfg {
-		addrCfgMap[certsCfg[i].Address] = &certsCfg[i].TlsConfig
+	for _, e := range endpoints {
+		var hostAddress api.HostAddress
+		hostAddress.TlsConfig = e.TlsConfig
+
+		hostAddress.Address = e.Address
+		if e.AddressOverride != "" {
+			hostAddress.Address = e.AddressOverride
+		}
+
+		addressEndpointMap[e.Address] = &hostAddress
 	}
 
-	return &TLSCertsMapper{addrCfgMap: addrCfgMap, lock: sync.RWMutex{}}
+	return &EndpointsMapper{
+		addressEndpoint: addressEndpointMap,
+		lock:            sync.RWMutex{},
+	}
 }
 
 // TlsConfigForAddress - get tls config for provided address
 // if config wasn't provided on startup time return disabled tls
-func (m *TLSCertsMapper) TlsConfigForAddress(address string) *config.TlsConfig {
+func (m *EndpointsMapper) TlsConfigForAddress(address string) config.TlsConfig {
 	m.lock.RLock()
 	defer m.lock.RUnlock()
 
-	v, ok := m.addrCfgMap[address]
+	v, ok := m.addressEndpoint[address]
 	if ok {
-		return v
+		return v.TlsConfig
 	}
 
-	return &config.TlsConfig{
+	return config.TlsConfig{
 		Enabled: false,
 	}
+}
+
+func (m *EndpointsMapper) TlsEndpointForAddress(address string) string {
+	m.lock.RLock()
+	defer m.lock.RUnlock()
+
+	v, ok := m.addressEndpoint[address]
+	if ok {
+		return v.Address
+	}
+
+	return address
 }
 
 /*
@@ -110,14 +133,15 @@ func addTLSSettings(endpoints []*api.HostEndpoint, tlsMapper tlsConfigMapper) []
 	for i := range endpoints {
 		for j := range endpoints[i].HostAddresses {
 			tlsCfg := tlsMapper.TlsConfigForAddress(endpoints[i].HostAddresses[j].Address)
-			endpoints[i].HostAddresses[j].TLSSettings = *tlsCfg
+			endpoints[i].HostAddresses[j].TlsConfig = tlsCfg
+
+			endpoints[i].HostAddresses[j].Address = tlsMapper.TlsEndpointForAddress(endpoints[i].HostAddresses[j].Address)
 		}
 	}
 	return endpoints
 }
 
 /* */
-
 type localPeersDiscovererTLSDecorator struct {
 	target    api.LocalPeersDiscoverer
 	tlsMapper tlsConfigMapper

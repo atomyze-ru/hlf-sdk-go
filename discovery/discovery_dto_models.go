@@ -38,17 +38,21 @@ func (d *chaincodeDTO) Endorsers() []*api.HostEndpoint {
 	defer d.lock.RUnlock()
 	return mapToArray(d.endorsers)
 }
+
 func (d *chaincodeDTO) Orderers() []*api.HostEndpoint {
 	d.lock.RLock()
 	defer d.lock.RUnlock()
 	return mapToArray(d.orderers)
 }
+
 func (d *chaincodeDTO) ChaincodeName() string {
 	return d.chaincodeName
 }
+
 func (d *chaincodeDTO) ChaincodeVersion() string {
 	return d.chaincodeVersion
 }
+
 func (d *chaincodeDTO) ChannelName() string {
 	return d.channelName
 }
