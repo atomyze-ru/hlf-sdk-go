@@ -15,7 +15,7 @@ const (
 	ErrMSPNotFound   = Error(`MSP not found`)
 	ErrPeerNotReady  = Error(`peer not ready`)
 
-	DefaultDuration = 5 * time.Second
+	DefaultGrpcCheckPeriod = 5 * time.Second
 )
 
 type ErrNoReadyPeers struct {

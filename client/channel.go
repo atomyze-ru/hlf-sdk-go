@@ -83,7 +83,7 @@ func (c *Channel) Chaincode(serviceDiscCtx context.Context, ccName string) (api.
 					return fmt.Errorf("initialize endorsers for MSP: %s: %w", mspID, err)
 				}
 
-				if err = c.peerPool.Add(mspID, p, api.StrategyGRPC(api.DefaultDuration)); err != nil {
+				if err = c.peerPool.Add(mspID, p, api.StrategyGRPC(api.DefaultGrpcCheckPeriod)); err != nil {
 					return fmt.Errorf("add endorser peer to pool: %s:%w", mspID, err)
 				}
 				return nil

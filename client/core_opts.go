@@ -83,7 +83,7 @@ func WithPeers(mspID string, peers []config.ConnectionConfig) CoreOpt {
 				return fmt.Errorf("create peer: %w", err)
 			}
 
-			err = c.peerPool.Add(mspID, pp, api.StrategyGRPC(api.DefaultDuration))
+			err = c.peerPool.Add(mspID, pp, api.StrategyGRPC(api.DefaultGrpcCheckPeriod))
 			if err != nil {
 				return fmt.Errorf("add peer to pool: %w", err)
 			}

@@ -85,7 +85,7 @@ func New(identity api.Identity, opts ...CoreOpt) (api.Core, error) {
 					return nil, fmt.Errorf("initialize endorsers for MSP: %s: %w", mspConfig.Name, err)
 				}
 
-				if err = coreImpl.peerPool.Add(mspConfig.Name, p, api.StrategyGRPC(api.DefaultDuration)); err != nil {
+				if err = coreImpl.peerPool.Add(mspConfig.Name, p, api.StrategyGRPC(api.DefaultGrpcCheckPeriod)); err != nil {
 					return nil, fmt.Errorf(`add peer to pool: %w`, err)
 				}
 			}
@@ -160,7 +160,7 @@ func New(identity api.Identity, opts ...CoreOpt) (api.Core, error) {
 						return nil, fmt.Errorf(`initialize endorsers for MSP: %s: %w`, mspID, err)
 					}
 
-					if err = coreImpl.peerPool.Add(mspID, p, api.StrategyGRPC(api.DefaultDuration)); err != nil {
+					if err = coreImpl.peerPool.Add(mspID, p, api.StrategyGRPC(api.DefaultGrpcCheckPeriod)); err != nil {
 						return nil, fmt.Errorf(`add peer to pool: %w`, err)
 					}
 				}
