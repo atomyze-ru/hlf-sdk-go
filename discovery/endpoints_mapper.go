@@ -7,8 +7,8 @@ import (
 	"github.com/atomyze-ru/hlf-sdk-go/api/config"
 )
 
-// implementation of tlsConfigMapper interface
-var _ tlsConfigMapper = (*EndpointsMapper)(nil)
+// implementation of connectionMapper interface
+var _ connectionMapper = (*EndpointsMapper)(nil)
 
 // EndpointsMapper - if tls is enabled with gossip maps provided from cfg TLS certs to discovered peers
 type EndpointsMapper struct {
@@ -35,6 +35,18 @@ func NewEndpointsMapper(endpoints []config.Endpoint) *EndpointsMapper {
 		addressEndpoint: addressEndpointMap,
 		lock:            sync.RWMutex{},
 	}
+}
+
+func (m *EndpointsMapper) MapConnection(address string) *api.HostAddress {
+	m.lock.RLock()
+	defer m.lock.RUnlock()
+
+	endpoint, ok := m.addressEndpoint[address]
+	if ok {
+		return endpoint
+	}
+
+	return &api.HostAddress{}
 }
 
 // TlsConfigForAddress - get tls config for provided address
@@ -72,12 +84,12 @@ func (m *EndpointsMapper) TlsEndpointForAddress(address string) string {
 
 type chaincodeDiscovererTLSDecorator struct {
 	target    api.ChaincodeDiscoverer
-	tlsMapper tlsConfigMapper
+	tlsMapper connectionMapper
 }
 
 func newChaincodeDiscovererTLSDecorator(
 	target api.ChaincodeDiscoverer,
-	tlsMapper tlsConfigMapper,
+	tlsMapper connectionMapper,
 ) *chaincodeDiscovererTLSDecorator {
 	return &chaincodeDiscovererTLSDecorator{
 		target:    target,
@@ -108,12 +120,12 @@ func (d *chaincodeDiscovererTLSDecorator) ChannelName() string {
 /* */
 type channelDiscovererTLSDecorator struct {
 	target    api.ChannelDiscoverer
-	tlsMapper tlsConfigMapper
+	tlsMapper connectionMapper
 }
 
 func newChannelDiscovererTLSDecorator(
 	target api.ChannelDiscoverer,
-	tlsMapper tlsConfigMapper,
+	tlsMapper connectionMapper,
 ) *channelDiscovererTLSDecorator {
 	return &channelDiscovererTLSDecorator{
 		target:    target,
@@ -129,13 +141,13 @@ func (d *channelDiscovererTLSDecorator) ChannelName() string {
 	return d.target.ChannelName()
 }
 
-func addTLConfigs(endpoints []*api.HostEndpoint, tlsMapper tlsConfigMapper) []*api.HostEndpoint {
+func addTLConfigs(endpoints []*api.HostEndpoint, tlsMapper connectionMapper) []*api.HostEndpoint {
 	for i := range endpoints {
 		for j := range endpoints[i].HostAddresses {
-			tlsCfg := tlsMapper.TlsConfigForAddress(endpoints[i].HostAddresses[j].Address)
-			endpoints[i].HostAddresses[j].TlsConfig = tlsCfg
+			conn := tlsMapper.MapConnection(endpoints[i].HostAddresses[j].Address)
 
-			endpoints[i].HostAddresses[j].Address = tlsMapper.TlsEndpointForAddress(endpoints[i].HostAddresses[j].Address)
+			endpoints[i].HostAddresses[j].TlsConfig = conn.TlsConfig
+			endpoints[i].HostAddresses[j].Address = conn.Address
 		}
 	}
 	return endpoints
@@ -144,12 +156,12 @@ func addTLConfigs(endpoints []*api.HostEndpoint, tlsMapper tlsConfigMapper) []*a
 /* */
 type localPeersDiscovererTLSDecorator struct {
 	target    api.LocalPeersDiscoverer
-	tlsMapper tlsConfigMapper
+	tlsMapper connectionMapper
 }
 
 func newLocalPeersDiscovererTLSDecorator(
 	target api.LocalPeersDiscoverer,
-	tlsMapper tlsConfigMapper,
+	tlsMapper connectionMapper,
 ) *localPeersDiscovererTLSDecorator {
 	return &localPeersDiscovererTLSDecorator{
 		target:    target,

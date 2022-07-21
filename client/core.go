@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"sync"
-	"time"
 
 	"github.com/hyperledger/fabric/msp"
 	"go.uber.org/zap"
@@ -86,7 +85,7 @@ func New(identity api.Identity, opts ...CoreOpt) (api.Core, error) {
 					return nil, fmt.Errorf("initialize endorsers for MSP: %s: %w", mspConfig.Name, err)
 				}
 
-				if err = coreImp.peerPool.Add(mspConfig.Name, p, api.StrategyGRPC(5*time.Second)); err != nil {
+				if err = coreImp.peerPool.Add(mspConfig.Name, p, api.StrategyGRPC(api.DefaultDuration)); err != nil {
 					return nil, fmt.Errorf(`add peer to pool: %w`, err)
 				}
 			}
@@ -120,9 +119,11 @@ func New(identity api.Identity, opts ...CoreOpt) (api.Core, error) {
 			if err != nil {
 				return nil, fmt.Errorf(`serialize current identity: %w`, err)
 			}
+
 			// add tls settings from mapper if they were provided
-			coreImp.config.Discovery.Connection.Tls = mapper.TlsConfigForAddress(coreImp.config.Discovery.Connection.Host)
-			coreImp.config.Discovery.Connection.Host = mapper.TlsEndpointForAddress(coreImp.config.Discovery.Connection.Host)
+			conn := mapper.MapConnection(coreImp.config.Discovery.Connection.Host)
+			coreImp.config.Discovery.Connection.Tls = conn.TlsConfig
+			coreImp.config.Discovery.Connection.Host = conn.Address
 
 			coreImp.discoveryProvider, err = discovery.NewGossipDiscoveryProvider(
 				coreImp.ctx,
@@ -159,7 +160,7 @@ func New(identity api.Identity, opts ...CoreOpt) (api.Core, error) {
 						return nil, fmt.Errorf(`initialize endorsers for MSP: %s: %w`, mspID, err)
 					}
 
-					if err = coreImp.peerPool.Add(mspID, p, api.StrategyGRPC(5*time.Second)); err != nil {
+					if err = coreImp.peerPool.Add(mspID, p, api.StrategyGRPC(api.DefaultDuration)); err != nil {
 						return nil, fmt.Errorf(`add peer to pool: %w`, err)
 					}
 				}

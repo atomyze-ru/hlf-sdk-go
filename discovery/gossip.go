@@ -18,13 +18,12 @@ var _ api.DiscoveryProvider = (*GossipDiscoveryProvider)(nil)
 
 type GossipDiscoveryProvider struct {
 	sd        *gossipServiceDiscovery
-	tlsMapper tlsConfigMapper
+	tlsMapper connectionMapper
 }
 
 // return tls config for peers found via gossip
-type tlsConfigMapper interface {
-	TlsConfigForAddress(address string) config.TlsConfig
-	TlsEndpointForAddress(address string) string
+type connectionMapper interface {
+	MapConnection(address string) *api.HostAddress
 }
 
 func NewGossipDiscoveryProvider(
@@ -33,7 +32,7 @@ func NewGossipDiscoveryProvider(
 	log *zap.Logger,
 	identitySigner discoveryclient.Signer,
 	clientIdentity []byte,
-	tlsMapper tlsConfigMapper,
+	tlsMapper connectionMapper,
 ) (*GossipDiscoveryProvider, error) {
 	discoveryClient, err := newFabricDiscoveryClient(ctx, connCfg, log, identitySigner)
 	if err != nil {
