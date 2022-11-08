@@ -12,15 +12,15 @@ import (
 )
 
 type (
-	Envelope struct {
-		Signature      []byte                `json:"signature"`
-		ChannelHeader  *common.ChannelHeader `json:"channel_header"`
-		ValidationCode peer.TxValidationCode `json:"validation_code"`
-		Transaction    *Transaction          `json:"transaction,omitempty"`
-		ChannelConfig  *ChannelConfig        `json:"channel_config,omitempty"`
-	}
-
-	Envelopes []*Envelope
+//Envelope struct {
+//	Signature      []byte                `json:"signature"`
+//	ChannelHeader  *common.ChannelHeader `json:"channel_header"`
+//	ValidationCode peer.TxValidationCode `json:"validation_code"`
+//	Transaction    *Transaction          `json:"transaction,omitempty"`
+//	ChannelConfig  *ChannelConfig        `json:"channel_config,omitempty"`
+//}
+//
+//Envelopes []*Envelope
 )
 
 func ParseEnvelopes(blockData [][]byte, txFilter txflags.ValidationFlags) ([]*Envelope, error) {
