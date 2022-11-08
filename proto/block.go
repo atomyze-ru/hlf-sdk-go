@@ -29,17 +29,6 @@ func init() {
 	mu.Unlock()
 }
 
-//type Block struct {
-//	Header            *common.BlockHeader  `json:"header"`
-//	Envelopes         []*Envelope          `json:"envelopes"`
-//	OrdererSignatures []*OrdererSignatures `json:"orderer_signatures"`
-//}
-
-//type OrdererSignatures struct {
-//	Identity  *msp.SerializedIdentity
-//	Signature []byte
-//}
-
 func ParseBlock(block *common.Block) (*Block, error) {
 	var err error
 	parsedBlock := &Block{

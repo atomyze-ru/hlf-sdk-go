@@ -4,18 +4,8 @@ import (
 	"fmt"
 
 	"github.com/hyperledger/fabric-protos-go/common"
-	//"github.com/hyperledger/fabric-protos-go/msp"
 	"github.com/hyperledger/fabric-protos-go/peer"
 	"github.com/hyperledger/fabric/protoutil"
-)
-
-type (
-//Transaction struct {
-//	Actions         TransactionsActions    `json:"transaction_actions"`
-//	CreatorIdentity msp.SerializedIdentity `json:"creator_identity"`
-//}
-//
-//Transactions []*Transaction
 )
 
 func ParseTransaction(payload *common.Payload, transactionType common.HeaderType) (*Transaction, error) {
