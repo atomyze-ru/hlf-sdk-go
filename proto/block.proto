@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package hlfsdkgo.proto;
+package hlfsdk.proto;
 
-option go_package = "github.com/atomyze-ru/hlf-sdk-go/proto";
+option go_package = "hlfsdk/proto";
 
 import "chan_config.proto";
 
@@ -24,7 +24,7 @@ message Envelope {
   common.ChannelHeader channel_header = 2;
   protos.TxValidationCode validation_code = 3;
   Transaction transaction = 4;
-  hlfsdkgo.proto.ChannelConfig channel_config = 5;
+  hlfsdk.proto.ChannelConfig channel_config = 5;
 }
 
 message Transaction {

@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package hlfsdkgo.proto;
+package hlfsdk.proto;
 
-option go_package = "github.com/atomyze-ru/hlf-sdk-go/proto";
+option go_package = "hlfsdk/proto";
 
 import "common/configuration.proto";
 import "common/policies.proto";
