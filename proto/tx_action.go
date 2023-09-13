@@ -84,6 +84,15 @@ func ParseTxAction(txAction *peer.TransactionAction) (*TransactionAction, error)
 	return parsedTxAction, nil
 }
 
+func GetTxPayload(txAction *peer.TransactionAction) ([]byte, error) {
+	payload, _, err := protoutil.GetPayloads(txAction)
+	if err != nil {
+		return nil, fmt.Errorf(`get payload from tx`)
+	}
+
+	return payload.GetChaincodeProposalPayload(), nil
+}
+
 func ParseChaincodeAction(txAction *peer.TransactionAction) (*peer.ChaincodeAction, error) {
 	ccActionPayload, err := protoutil.UnmarshalChaincodeActionPayload(txAction.Payload)
 	if err != nil {
