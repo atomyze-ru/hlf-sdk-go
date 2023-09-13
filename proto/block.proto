@@ -38,6 +38,7 @@ message TransactionAction {
   repeated kvrwset.KVRWSet read_write_sets = 3;
   protos.ChaincodeInvocationSpec chaincode_invocation_spec = 4;
   msp.SerializedIdentity creator_identity = 5;
+  bytes payload = 6;
 }
 
 message OrdererSignature {
