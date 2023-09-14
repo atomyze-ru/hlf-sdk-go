@@ -96,7 +96,11 @@ func ParseTxPayload(txAction *peer.TransactionAction) ([]byte, error) {
 		return nil, fmt.Errorf(`get payload from tx`)
 	}
 
-	return payload.GetChaincodeProposalPayload(), nil
+	if payload.GetAction() == nil {
+		return nil, nil
+	}
+
+	return payload.GetAction().GetProposalResponsePayload(), nil
 }
 
 func ParseChaincodeAction(txAction *peer.TransactionAction) (*peer.ChaincodeAction, error) {
