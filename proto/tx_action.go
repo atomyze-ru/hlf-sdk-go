@@ -61,11 +61,6 @@ func ParseTxAction(txAction *peer.TransactionAction) (*TransactionAction, error)
 		return nil, fmt.Errorf("parse transaction chaincode invocation spec: %w", err)
 	}
 
-	payload, err := ParseTxPayload(txAction)
-	if err != nil {
-		return nil, fmt.Errorf("parse transaction payload: %w", err)
-	}
-
 	// because there is no cc version in peer.ChaincodeInvocationSpec
 	if chaincodeInvocationSpec.ChaincodeSpec == nil {
 		chaincodeInvocationSpec.ChaincodeSpec = &peer.ChaincodeSpec{}
@@ -84,23 +79,10 @@ func ParseTxAction(txAction *peer.TransactionAction) (*TransactionAction, error)
 		ReadWriteSets:           rwSets,
 		ChaincodeInvocationSpec: chaincodeInvocationSpec,
 		CreatorIdentity:         creator,
-		Payload:                 payload,
+		Payload:                 ccAction.GetResponse().GetPayload(),
 	}
 
 	return parsedTxAction, nil
-}
-
-func ParseTxPayload(txAction *peer.TransactionAction) ([]byte, error) {
-	payload, _, err := protoutil.GetPayloads(txAction)
-	if err != nil {
-		return nil, fmt.Errorf(`get payload from tx`)
-	}
-
-	if payload.GetAction() == nil {
-		return nil, nil
-	}
-
-	return payload.GetAction().GetProposalResponsePayload(), nil
 }
 
 func ParseChaincodeAction(txAction *peer.TransactionAction) (*peer.ChaincodeAction, error) {
